@@ -33,7 +33,7 @@ The adopted procedure follows the steps sketched by Krauss et al. [5], which wer
 
 * __Training__. In this phase I will train two LSTM networks, starting with a structure analogous to the ones described in refs. [5-8], one network implementing soft attention mechanism and one implementing hybrid attention mechanism. The model parameters will be changed, thus the result might be considerably different compared to the one of the cited papers.
 
-* __Trading__. The trading policy will be to go long on the 10 stocks with highest probability to outperform the median intraday return and go short on the 10 stocks with the lowest probability of such an outcome. If time allows it, new policies might be attempted, such as neural networks mapping of the arbitrage signals [13].
+* __Trading__. The trading policy will be to go long on the 10 stocks with highest probability to outperform the median intraday return and go short on the 10 stocks with the lowest probability of such an outcome. If time allows it, new policies might be attempted, such as neural networks mapping of the arbitrage signals [13]. Results will be evaluated in terms of daily return, consistently with [5-8].
 
 
 
