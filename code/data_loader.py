@@ -11,7 +11,13 @@ import quandl
 import os
 
 class DataLoader:
-    def __init__(self, start=None, end=None, reload_sp500=True, overwrite=False):
+    """
+    Class for handling data loading
+    """
+    
+    def __init__(self, start=None, end=None, reload_sp500=True, overwrite=False, number_of_data=None):
+
+        #define start and end dates
         if start is None:
             self.start = dt.datetime(1990, 1, 1)
         else:
@@ -21,10 +27,11 @@ class DataLoader:
             self.end = dt.datetime(2015, 1, 1)
         else:
             self.end = end
-
+        
+        #read quandl key
         self.quandl_key = quandl_key 
         
-        # get sp500 self.tickers
+        #get sp500 self.tickers
         self.reload_sp500 = reload_sp500
         self.overwrite = overwrite
         if self.reload_sp500:
@@ -34,20 +41,35 @@ class DataLoader:
             self.data_folder = '../data/15years_data/'
             self.tickers = [i[0:-4] for i in os.listdir(self.data_folder)]
         
-        self.tickers = self.tickers[0:10]
+        #load only selected data
+        if number_of_data is not None:
+            self.tickers = self.tickers[0:number_of_data]
          
         
     def get_sp500_tickers(self):
+        """
+        input: None
+        output: list of tickers in sp500
+        """
+        
         table = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
         return table[0]['Symbol']
     
 
-    def create_date_range(self):
-        return rrule(DAILY, dtstart=self.start, until=self.end, byweekday=(MO,TU,WE,TH,FR))
+    #def create_date_range(self):
+    #    """
+    #    """
+    #    return rrule(DAILY, dtstart=self.start, until=self.end, byweekday=(MO,TU,WE,TH,FR))
 
 
     def retrieve_history(self, ticker, api):
-        
+        """
+        helper function for get_data. Retrieves history of single stock
+        ---
+        input: ticker name, desired API
+        output: dataframe with history
+        """
+
         if api == 'quandl':
             tmp_df = reader.DataReader("WIKI/"+ticker, 'quandl', self.start, self.end, api_key=self.quandl_key)
         else:
@@ -59,19 +81,34 @@ class DataLoader:
         return tmp_df
 
 
-    def get_data(self):
+    def get_data(self, verbose=False):
+        """
+        Retrieves history of all the selected tickers:
+         * using and API (quandl or yahoo finance)
+         * from csv
+        ---
+        input: verbose - boolean.
+        output: 2 dataframes, one for open and one for close values.
+                columns: tickers
+                index: date
+        """
+
         tmp_open = []
         tmp_close = []
+        dates = []
+        #to track unretrievable data
         found = []
         missed = []
-        dates = []
         for ticker in self.tickers:
             
-            print("loading "+ticker)
+            if verbose:
+                print("loading "+ticker)
+
             if self.reload_sp500:
                 # get from api
                 
-                try:
+                try: 
+                    #default api: quandl
                     api = 'quandl'
                     tmp_df = self.retrieve_history(ticker, api)
                     
@@ -89,6 +126,7 @@ class DataLoader:
 
                 except Exception:
                     try:
+                        #second attempt with yahoo finance
                         api = 'yahoo'
                         tmp_df = self.retrieve_history(ticker, api)
                         
@@ -119,6 +157,7 @@ class DataLoader:
                     missed.append(ticker)
                     continue
         
+        #write output dataframes
         df_open = pd.DataFrame(tmp_open)
         df_close = pd.DataFrame(tmp_close)
         df_open = df_open.transpose()
@@ -126,10 +165,10 @@ class DataLoader:
         df_open.columns = found
         df_close.columns = found
         if self.reload_sp500:
-            df_open.set_index(dates, inplace = True)#tmp_df.index
+            df_open.set_index(dates, inplace = True)
             df_close.set_index(dates, inplace = True)
         else:
-            df_open.set_index(tmp_df['Date'], inplace = True)#tmp_df.loc[mask].index
+            df_open.set_index(tmp_df['Date'], inplace = True)
             df_close.set_index(tmp_df['Date'], inplace = True)
         
         
