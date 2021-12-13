@@ -1,9 +1,9 @@
 from data_loader import DataLoader
 
 #loader = DataLoader(reload_sp500=True, number_of_data=10, overwrite=False)
-loader = DataLoader(reload_sp500=False, overwrite=False)
-#df_open, df_close = loader.get_data(verbose=True)
-loader.download_history_data(verbose=False)
+loader = DataLoader(reload_sp500=True, overwrite=True)
+#loader.retrieve_sp500_history()
+loader.download_history_data(verbose=True)
 
 #print(df_open.head())
 #tmp = loader.get_sp500_changes()
