@@ -21,8 +21,8 @@ The adopted procedure follows the steps sketched by Krauss et al. [5], which wer
 
 *  __Preprocessing__. In this phase, the dataset is divided in study periods (~4 years long), each in turn sub-divided into a feature creation (~1 year), a training (~2 years) and a testing (or trading, ~1 year) part, the latter being non-overlapping for each study period. For each stock _s_ and each study period a vector of features is created computing:
     1.  intraday return, _ir<sup>(s)</sup><sub>t,m</sub>  =  cp<sup>(s)</sup><sub>t-m</sub>  / op<sup>(s)</sup><sub>t-m</sub> -1_;
-    2.  returns with respect to last closing price, _cr<sup>(s)</sup><sub>t,m</sub>  =  cp<sup>(s)</sup><sub>t-1</sub>  / cp<sup>(s)</sup><sub>t-m-1</sub> -1_; 
-    3.  returns with respect to opening price, _op<sup>(s)</sup><sub>t,m</sub>  =  op<sup>(s)</sup><sub>t</sub>  / op<sup>(s)</sup><sub>t-m</sub> -1_;
+    2.  next day returns, _nr<sup>(s)</sup><sub>t,m</sub>  =  op<sup>(s)</sup><sub>t-m</sub>  / cp<sup>(s)</sup><sub>t-m-1</sub> -1_; 
+    3.  returns with respect to closing price, _cr<sup>(s)</sup><sub>t,m</sub>  =  cp<sup>(s)</sup><sub>t-m</sub>  / cp<sup>(s)</sup><sub>t-m</sub> -1_;
     
     varying _t_, the current timestamp and _m_, a time value in the range of the feature part. Stocks _s_ at time _t_ are categorized according to whether their intraday return at _m=0_ (_ir<sup>(s)</sup><sub>t,0</sub>_) is higher or lower than the cross-sectional median. Vectors are standardized and piled up for each stock, and eventually merged into a feature matrix:
 
@@ -31,13 +31,13 @@ The adopted procedure follows the steps sketched by Krauss et al. [5], which wer
 </p>
 <sup>Figure from [8]. Here, the length of each study period is of 1008 days, the length of the feature part is of 240 days and the number of stocks is n.</sup>
 
-* __Training__. In this phase I will train two LSTM networks, starting with a structure analogous to the ones described in refs. [5-8], one network implementing soft attention mechanism and one implementing hybrid attention mechanism. The model parameters will be changed, thus the result might be considerably different compared to the one of the cited papers.
+* __Training__. In this phase I will train two LSTM networks, starting with a structure analogous to the ones described in refs. [5-8], one network implementing soft attention mechanism and one implementing general attention mechanism. The model parameters will be changed, thus the result might be considerably different compared to the one of the cited papers.
 
 * __Trading__. The trading policy will be to go long on the 10 stocks with highest probability to outperform the median intraday return and go short on the 10 stocks with the lowest probability of such an outcome. If time allows it, new policies might be attempted, such as neural networks mapping of the arbitrage signals [13]. Results will be evaluated in terms of daily return, consistently with [5-8].
 
 
 
-## work-breakdown structure
+### expected work-breakdown structure
 * __dataset collection__. _Method_: quandl library/github repositories. _Time_: 2h;
 * __preprocessing__. _Method_: python. _Time_: 8h-10h;
 * __designing and building an appropriate network__. _Method_: python (mainly keras). _Time_: 8h-10h;
@@ -48,6 +48,38 @@ The adopted procedure follows the steps sketched by Krauss et al. [5], which wer
 
 __Total time__: 50-58h
 
+
+## Hacking 
+
+### Implementation
+The implementation is done according to the following schema:
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/86531192/146245174-182d45d3-cb61-4b63-804f-32cfc5cb3e13.png">
+</p>
+
+### Changes w.r.t the original description done for Milestone 1:
+*	I decided to implement the General attention mechanism proposed by Luong et al. [12] instead of the hybrid mechanism, mainly because digging into the problem I realized that the former is widely used for time series analysis (see for example [14]), but also because the preprocessing took me considerably more time than expected.
+*	Digging into the problem under analysis, I realized a mistake in the original paper of Ghosh and coworkers [8] that I copied into my summary: Instead of using the return w.r.t the last opening price, they used the next intraday return, namely the return w.r.t. the previous day. Since the return w.r.t the last closing price is already included among the predictors, this can be considered a more than reasonable substitution.
+*	Because of data retrieval issues (see below paragraphs), the study period is between 2000-2020.
+	
+### Brief summary
+
+The aim of this project was to improve the daily return (metric of the project) of 0.64% obtained in [8] thanks to the addition of an attention layer. At this stage, it is important to underline that the retrieval of the S&P 500 stocks without a paid software is nothing but trivial. I handled the task in `data_loader.py`, where Wikipedia and NASDAQ sources are exploited to (i) retrieve all the current stocks in S&P 500, (ii) retrieve an (incoherent) list of historical changes of S&P 500 of the last 20 years, (iii) make this list more coherent, (iv) update tickers names to their current ones, (v) download right pieces of data, and paste them together in a proper manner. Eventually, the only limitations still present in the data collection are due to the free APIs used, which do not offer the whole spectrum of historical data required. This process is time-consuming, this I implemented the preferable option of directly read the stored results from csv.
+
+Although this issue, the data collected were in sufficient amount and quality to produce results comparable to those of Ghosh and co-workers, reaching a daily return of 0.61% with ~330 stocks and without addition of any attention layers. 
+
+Three attention layers were attempted: (i) Keras AdditiveAttention (ii) my customized implementation of Bahdanau’s soft attention (in `attention.py`) and (iii) my customized implementation of Luong’s general attention (in `attention.py`). The latter was observed to worsen the daily return reaching a value slightly below 0.40%, while the direct addition Keras AdditiveAttention resulted in an extremely computationally expensive implementation, not affordable for a standard computer RAM. Thus, the possibility of a drastic reduction of the batch size was implemented and exploited, leading to the poor performance of 0.08% daily return. 
+
+On the other hand, the implementation of the customized soft attention lead to a daily return of 0.66%, reaching the aimed result. Moreover, since this implementation was observed to have an optimal number of features of 120 (half of the ones required originally), the execution time is more than halved.
+
+### work-breakdown structure - results
+* __dataset collection__ (`data_loader.py`) _Time_: 44.5h;
+* __preprocessing__. (`data_preprocessor.py`) _Time_: 5h;
+* __designing and building an appropriate network + training and fine-tuning that network__ (`attention.py`, `model_trainer.py`, `model_runner.py`) _Time_: 15.5h;
+* __writing on GitHub__. _Time_: 1.5h;
+
+Time tracking was done with SuperProductivity (https://super-productivity.com/)
 
 ## Bibliography
 
@@ -87,11 +119,13 @@ arXiv:1803.06386.
 
 [11] Bahdanau, D., Cho, K., & Bengio, Y. (2014). _Neural machine translation by jointly learning to align and translate_. arXiv:1409.0473.
 
-[12] Shen, T., Zhou, T., Long, G., Jiang, J., Wang, S., & Zhang, C. (2018). _Reinforced self-attention network: a hybrid of hard and soft attention for sequence modeling_. arXiv preprint arXiv:1801.10296.
+[12] Luong, M. T., Pham, H., & Manning, C. D. (2015). _Effective approaches to attention-based neural machine translation_. arXiv preprint arXiv:1508.04025.
 
 [13] Guijarro-Ordonez, J., Pelger, M., & Zanotti, G. (2021). _Deep Learning Statistical Arbitrage_. arXiv:2106.04028 
 
 
+
+[14] Shih, S. Y., Sun, F. K., & Lee, H. Y. (2019). _Temporal pattern attention for multivariate time series forecasting. Machine Learning_, 108(8), 1421-1441
 
 
 
