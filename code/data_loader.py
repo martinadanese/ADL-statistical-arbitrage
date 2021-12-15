@@ -1,7 +1,4 @@
 import numpy as np
-from pandas.tseries.holiday import USFederalHolidayCalendar
-from pandas.tseries.offsets import CustomBusinessDay
-
 import pandas as pd
 #!pip install pandas-datareader --upgrade
 import pandas_datareader.data as reader
@@ -9,15 +6,48 @@ import pandas_datareader as pdreader
 from pandas_datareader._utils import RemoteDataError
 import datetime as dt
 from dateutil.relativedelta import relativedelta
-from dateutil.rrule import DAILY, rrule, MO, TU, WE, TH, FR
-from true_config import *
+from local_config import *
 import quandl
 import os
 
+
+
+
+#   --------------------------------------------------------- 
 class DataLoader:
+#   --------------------------------------------------------- 
+    
     """
     Class for handling data loading
+    
+    Members:
+    
+     - start : start date from which to download data 
+     - end : end date from which to stop downloading data 
+     - quandl_key : key for quandl API (found in config.py file)
+     - alpha_key : key for Alpha Vantage API (in config.py file)
+     - reload_sp500 : boolean. If true all data is downloaded again. May take ~30min
+     - overwrite: boolean. If reload_sp500 is true and this is true, csv files for 
+           single tickers are overwritten (not suggested)
+     - data_folder: relative path to the data folder as presented on github
+     - tickers: list of current tickers in sp500 [string]
+     - tickers_history: [dictionary] used to build the history.
+           see retrieve_sp500_history to further explanations
+
+    Methods:
+     
+     - get_sp500_tickers : get list of the current sp500 stocks
+     - old_tickers_converter : convert old ticker names into current one according to Nasdaq data (csv)
+     - get_sp500_changes : Get historical changes of sp500 and stores info into a dataframe
+     - get_tickers_history : getter
+     - get_tickers : getter
+     - retrieve_sp500_history : create a history of all historical and current sp500 components
+     - retrieve_ticker_history : retrieves history of single stock
+     - download_history_data : Retrieves history of all the selected tickers
+     - download_history_data_helper : helper for download_history_data
+
     """
+#   --------------------------------------------------------- 
     
     def __init__(self, start=None, end=None, reload_sp500=True, overwrite=False): #number_of_data=None):
 
@@ -61,7 +91,7 @@ class DataLoader:
         
 
         """
-        get history of the current sp500 stocks
+        get list of the current sp500 stocks
         
         ------
         input: None
@@ -168,6 +198,10 @@ class DataLoader:
         return self.tickers_history
 
 
+    #   ----------------------------------------------------- 
+    def get_tickers(self):
+    #   ----------------------------------------------------- 
+        return self.tickers
 
     #   ----------------------------------------------------- 
     def retrieve_sp500_history(self):
@@ -405,15 +439,14 @@ class DataLoader:
                 sp500_close.to_csv(self.data_folder+'tmp_close.csv')
 
         else:
-            sp500_close = pd.read_csv(self.data_folder+'sp500_open.csv')
-            sp500_open = pd.read_csv(self.data_folder+'sp500_close.csv')
+            sp500_close = pd.read_csv(self.data_folder+'sp500_close.csv')
+            sp500_open = pd.read_csv(self.data_folder+'sp500_open.csv')
             sp500_open.rename(columns={ sp500_open.columns[0]: "Date" }, inplace = True)
             sp500_close.rename(columns={ sp500_close.columns[0]: "Date" }, inplace = True)
             sp500_open.set_index(pd.to_datetime(sp500_open.Date, format='%Y-%m-%d'), inplace = True)
             sp500_close.set_index(pd.to_datetime(sp500_close.Date, format='%Y-%m-%d'), inplace = True)
-            mask = (sp500_open.index>self.start) & (sp500_open.index<=self.end)
-            sp500_open = sp500_open[mask]
-            sp500_close = sp500_close[mask]
+            sp500_open = sp500_open[(sp500_open.index>self.start) & (sp500_open.index<=self.end)]
+            sp500_close = sp500_close[(sp500_close.index>self.start) & (sp500_close.index<=self.end)]
 
         return sp500_open, sp500_close
 
