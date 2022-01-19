@@ -1,0 +1,6 @@
+flask.__version__ : '2.0.2'
+tensorflow.__version__ : '2.9.0-dev20220115'
+sklearn.__version__ : '0.24.1'
+werkzeug.__version__ :'2.0.1'
+np.__version__ : '1.22.1'
+pd.__version__ : '1.1.3'

@@ -77,9 +77,9 @@ class Trainer:
             x = Flatten()(x)
         
         elif self.model_type=='lstm+custom_soft_attention':
-            x, last_hidden_state, _ = LSTM(10, return_sequences=True, return_state=True)(inputs)
+            x, last_hidden_state, _ = LSTM(25, return_sequences=True, return_state=True)(inputs)
             x = Dropout(0.5)(x)
-            attention_layer = Bahdanau(5)
+            attention_layer = Bahdanau(25)
             x = attention_layer(x, last_hidden_state)
             x = Flatten()(x)
         

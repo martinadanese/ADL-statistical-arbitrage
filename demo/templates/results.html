@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#circle {
+  width: 25px;
+  height: 25px;
+  -webkit-border-radius: 25px;
+  -moz-border-radius: 25px;
+  border-radius: 25px;
+  background: #eea302;
+}
+.imageA {
+position: absolute;
+left: 250px;
+top: 200px;
+}
+button {
+     padding: 5px 15px;
+     color: #ffffff;
+     border: 0 none;
+     background: black;
+     cursor: pointer;
+     -webkit-border-radius: 5px;
+     border-radius: 5px;
+
+}
+
+input[type=file]::file-selector-button {
+  border: 0 none;
+  background-color: #eea302;
+  transition: 1s;
+  padding: 5px 15px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+}
+
+input[type=file]::file-selector-button:hover {
+  background-color: #f4c45d;
+  border: 0 none;
+}
+
+.divider{
+    width:auto;
+    height:5px;
+    display:inline-block;
+}
+
+</style>
+</head>
+<body style="background-color:#f3f3f3; font-family:helvetica;">
+    <div style = "position:fixed; left:50px; top:33px;"id="circle"></div>
+    <div style = "position:fixed; left:85px; top:20px;">
+        <p style="font-size:70%;">
+        Martina Danese 
+        <br>
+        e12108361@student.tuwien.ac.at
+        </p>
+    </div>
+    <img src="{{url_for('static', filename='image.png')}}" width="500" height="420" class='imageA' />
+    <div style = "position:fixed; left:800px; top:60px;">
+	<h1 style="font-size:800%;"> ADL </h1>
+        <h2> Statistical Arbitrage Demo </h2>
+        <p style="font-size:85%;"> Demo for the project of Applied Deep Learning course @ TUWien. 
+        <br> Here you can enter a portfolio and see predictions for 1 year of arbitraging.
+        <br> See the git repository for input formatting and implementation details.
+        <br><button onclick="document.location='https://github.com/martinadanese/ADL-statistical-arbitrage'">GitHub</button>
+        </p>
+        <p  style="font-size:85%;">
+        {{ line1 }}
+        </p>
+        <p  style="text-align:right;font-size:85%;">
+        <br>
+        {{ line2 }}
+        <br>
+        {{ line3 }}
+        </p>
+    </div>
+</body>
+</html>
+

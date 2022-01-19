@@ -1,0 +1,10 @@
+1. Check requirements.txt for necessary imports
+2. Run with "bash run_demo.sh"
+3. Copy and paste on your browser the link printed on the screen
+4. With the "Browse" button (yellow) select a csv file containing either open or close positions of your portfolio. If you want inspiration, use csv in static folder
+5. Click on the corresponding upload button (blue or red) below
+6. Repeat for the other position
+7. Click on "Run" button (gray)
+8. Wait (~1-2 minutes)
+9. Read the results
+10. Visit my GitHub :)
